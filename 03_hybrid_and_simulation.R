@@ -93,6 +93,7 @@ rebmain_state <- c(
 det_model(rebmain_state, dtmc)
 
 # SIMULATION --------------------------------------------------------------
+# Dont run yet
 condition_df <- data.frame( "timestep" = numeric(),
                             "n" = numeric(),
                             "a" = numeric(), "b" = numeric(),

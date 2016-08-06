@@ -79,6 +79,6 @@ e_rebmain <- function(alf_1. = alf_1,
                       e = current_state[6],
                       R. = R,
                       r. = r) {
-  (alf_1. * e) + (alf_2. * (R. /r.))  #  is this right? or should alf_2*R before /
+  (alf_1. * e) + (alf_2. * (R. /r.))  #  is this right? or should alf_2*R before divide
 }
 

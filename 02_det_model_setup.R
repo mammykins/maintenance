@@ -45,7 +45,7 @@ det_model <- function(current_state, transition_mat) {
 
 
 # TIDY ENVIRONMENT --------------------------------------------------------
-# clear junk from "00_getdata.R", as incorporated into dtmc
+# clear junk from 00_getdata.R, as incorporated into dtmc
 
 rm(
   list = c(paste0("a", letters[1:5]),
