@@ -11,19 +11,19 @@
 #  should add unit tests warning and error messages given more time
 
 n_rebmain <- function(rebuild_monies = R, rebuild_cost = r,
-                      current_n = current_state[1] ) { 
-  (rebuild_monies / rebuild_cost) + current_n
+                      current_n = current_state[1], dr = dis_r ) { 
+  (rebuild_monies / (rebuild_cost / dr)) + current_n
 }
 
 # A
 a_rebmain <- function(maint_monies = M,
-                       x1 = x_b, x2 = x_c, x3 = x_d,
-                       cb = cost_b, cc = cost_c, cd = cost_d,
-                       current_a = current_state[2]) {
+                      x1 = x_b, x2 = x_c, x3 = x_d,
+                      cb = cost_b, cc = cost_c, cd = cost_d,
+                      current_a = current_state[2], dm = dis_m) {
   current_a + 
-    ((x1 * maint_monies) / cb) + 
-    ((x2 * maint_monies) / cc) + 
-    ((x3 * maint_monies) / cd)
+    ((x1 * maint_monies) / (cb / dm)) + 
+    ((x2 * maint_monies) / (cc / dm)) + 
+    ((x3 * maint_monies) / (cd / dm))
 }
 
 
@@ -36,10 +36,12 @@ b_rebmain <- function(alf_1. = alf_1,
                       h. = h,
                       x1 = x_b,
                       M. = M,
-                      cb = cost_b) {
+                      cb = cost_b,
+                      dm = dis_m,
+                      dr = dis_r) {
   
-  (alf_1. * (b - (y1 * (R. - h.))/ r )) +
-  (alf_2. * b) - (x1 * M. / cb)
+  (alf_1. * (b - (y1 * (R. - h.))/ (r / dr) )) +
+    (alf_2. * b) - (x1 * M. / (cb / dm))
 }
 
 
@@ -52,10 +54,12 @@ c_rebmain <- function(alf_1. = alf_1,
                       h. = h,
                       x2 = x_c,
                       M. = M,
-                      cc = cost_c) {
+                      cc = cost_c,
+                      dm = dis_m,
+                      dr = dis_r) {
   
-  (alf_1. * (c - y2 * (R. - h.)/ r )) +
-  (alf_2. * c) - (x2 * M./ cc)
+  (alf_1. * (c - y2 * (R. - h.)/ (r / dr) )) +
+    (alf_2. * c) - (x2 * M./ (cc / dm))
 }
 
 # D
@@ -67,10 +71,12 @@ d_rebmain <- function(alf_1. = alf_1,
                       h. =h,
                       x3 = x_d,
                       M. = M,
-                      cd = cost_d) {
+                      cd = cost_d,
+                      dm = dis_m,
+                      dr = dis_r) {
   
-  (alf_1. * (d - y3 * (R. - h.)/ r )) + 
-  (alf_2. * d) - (x3 * M./ cd)
+  (alf_1. * (d - y3 * (R. - h.)/ (r / dr) )) + 
+    (alf_2. * d) - (x3 * M./ (cd / dm))
 }
 
 # E
@@ -78,7 +84,8 @@ e_rebmain <- function(alf_1. = alf_1,
                       alf_2. = alf_2,
                       e = current_state[6],
                       R. = R,
-                      r. = r) {
-  (alf_1. * e) + (alf_2. * (R. /r.))  #  is this right? or should alf_2*R before divide
+                      r. = r,
+                      dr = dis_r) {
+  (alf_1. * e) + (alf_2. * (R. /(r. / dr)))  #  is this right? or should alf_2*R before divide
 }
 

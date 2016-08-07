@@ -33,7 +33,7 @@ R <- 1500e6 #  £m invested in rebuilding the buildings at time t
 main_cash <- 1500e6  #  £m maintenance cash
 revenue <- 1234e6  #  £m revenue of the school
 fixed_main_cost <- 1288e6  #  £m Fixed maitanence cost
-infl_rate <- 1  #  inflation rate, should be a vector
+infl_rate <- 1.13  #  inflation rate, should be a vector
 
 # INITIAL STATE --------------------------------------------------------------
 initial_state <- pdsp_data %>%
@@ -42,7 +42,7 @@ initial_state <- pdsp_data %>%
   as.numeric()  #  Drop building type, remove columns and names
 
 # PARAMETERS --------------------------------------------------------------
-
+#M <- main_cash / infl_rate + revenue - fixed_main_cost  #  Excel sandpit model
 M <- (main_cash + revenue - fixed_main_cost) / infl_rate # amount of money invested in maintaining the buildings at time t
 r <- 2000 # rebuild rate/unit cost of bringing a building back to new condition
 
@@ -60,6 +60,8 @@ y_b <- 0.15  # proportion of rebuilding fund allocated to building type B
 y_c <- 0.45  # proportion of rebuilding fund allocated to building type C 
 y_d <- 0.40  # proportion of rebuilding fund allocated to building type D 
 
+dis_m <- 0.5  # discounted factor for maintenance cost
+dis_r <- 0.17 # discounted factor for rebuild cost
 
 # FUNCTIONS ---------------------------------------------------------------
 
