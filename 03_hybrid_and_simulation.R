@@ -14,6 +14,7 @@ rm(list = ls())
 # LIBRARY -----------------------------------------------------------------
 library(dplyr)
 library(markovchain)
+library(purrr)
 
 # DATA --------------------------------------------------------------------
 source("01_rebuild_maintenance.R")
