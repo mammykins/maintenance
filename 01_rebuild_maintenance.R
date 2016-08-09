@@ -89,3 +89,28 @@ e_rebmain <- function(alf_1. = alf_1,
   (alf_1. * e) + (alf_2. * (R. /(r. / dr)))  #  is this right? or should alf_2*R before divide
 }
 
+
+#  Combine all to create a vector of initial state reb_main'ed
+rebmain_state_fun <- function(initial_state = current_state, ...) {
+  #  take the current state and rebuild and maintain
+  #  given the relevant policy parameters and costs inputs
+#input
+current_state <- initial_state
+current_n <- initial_state[1]
+current_a <- initial_state[2]
+b <- initial_state[3]
+c <- initial_state[4]
+d <- initial_state[5]
+e <- initial_state[6]
+  
+output <-  c(
+  n_rebmain(),
+  a_rebmain(),
+  b_rebmain(),
+  c_rebmain(),
+  d_rebmain(),
+  e_rebmain()
+)
+return(output)
+#  the output needs to feed into the det model
+}

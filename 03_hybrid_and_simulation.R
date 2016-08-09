@@ -21,7 +21,7 @@ source("01_rebuild_maintenance.R")
 # USER INPUT --------------------------------------------------------------
 
 build_type_of_interest <- "built_pre_1919"
-timesteps <- 1  #  forecast horizon, numer of time steps to simulate
+timesteps <- 10  #  forecast horizon, numer of time steps to simulate
 
 # GET RELEVANT DATA
 source("00_getdata.R")
@@ -63,49 +63,54 @@ y_d <- 0.40  # proportion of rebuilding fund allocated to building type D
 dis_m <- 0.5  # discounted factor for maintenance cost
 dis_r <- 0.17 # discounted factor for rebuild cost
 
-# FUNCTIONS ---------------------------------------------------------------
-
-#  UPDATE CURRENT STATES to aid iteration
-current_state <- initial_state
-h <- current_state[6]*r # £ to rebuild all current decommissioned type building at time zero. 
-#  need to update iteratively or incorporate into each
-
-if (R > current_state[6]*r) {  #  £ cost of bringing e to a
-  #  money surplus for rebuilding b, c, d after rebuilding all e
-  alf_1 <- 1  
-  alf_2 <- 0
-}  else {
-  #  when there is no surplus after attempting rebuild of all e 
-  alf_1 <- 0
-  alf_2 <- 1
-}
-
-
 # ONE TIME STEP HYBRID ----------------------------------------------------
 # TEST
-rebmain_state <- c(
-  n_rebmain(),
-  a_rebmain(),
-  b_rebmain(),
-  c_rebmain(),
-  d_rebmain(),
-  e_rebmain()
-)
+current_state <- initial_state
 
-det_model(rebmain_state, dtmc)
+#  det_model(current_state = rebmain_state_fun(), transition_mat = dtmc)
 
 # SIMULATION --------------------------------------------------------------
-# Dont run yet
-condition_df <- data.frame( "timestep" = numeric(),
-                            "n" = numeric(),
-                            "a" = numeric(), "b" = numeric(),
-                            "c" = numeric(), "d" = numeric(),
-                            "e" = numeric(),
-                            stringsAsFactors = FALSE)
-for (i in 0:timesteps) {
-  newrow <- as.list(c(i, round(as.numeric(initial_state * dtmc ^ i), 0)))
-  condition_df[nrow(condition_df) + 1, ] <- newrow
-}
-
-condition_df <- condition_df %>%
-  mutate(total = n + a + b + c + d + e) 
+hybrid_sim <- function(start_state = initial_state, t = timesteps, ...) { 
+  #  input the initial state from n, a, b, c, d, e as the current state at time zero
+  #  create an empty matrix to hold timesteps + 1 rows and 6 columns
+  #  first row is initial state
+  mat_state <- matrix(0, nrow = (t + 1), ncol = 6)
+  #print(mat_state)
+  mat_state[1, ] <- start_state
+  #print(mat_state)
+  
+for (i in 1:(t)) {
+  
+  h <- mat_state[i, 6]*r # £ to rebuild all current decommissioned 
+  #  need to update iteratively, hence inclusion here
+  
+  #  Check lexical scoping, R searches within the function
+  if (R > h) {  #  £ cost of bringing e to a
+    #  money surplus for rebuilding b, c, d after rebuilding all e
+    alf_1 <- 1  
+    alf_2 <- 0
+  }  else {
+    #  when there is no surplus after attempting rebuild of all e 
+    alf_1 <- 0
+    alf_2 <- 1
+  }
+  #print(R)
+  #print(h)
+  
+  #  this provides input for rebmain function and det model
+  current_state <- mat_state[i, 1:6]
+  rebmain_state <- rebmain_state_fun(initial_state = current_state)
+  #  this inputs into det model which outputs next state at i + 1
+  mat_state[(i + 1), 1:6] <-      det_model(current_state = rebmain_state,
+                                       transition_mat = dtmc)
+  #print(mat_state)
+  }  #  end of for
+  #  let's return an output that looks like our previous condition_df
+  condition_df <- data.frame( "timesteps" = seq(0, timesteps, 1),
+                              "n" = mat_state[, 1],
+                              "a" = mat_state[, 2], "b" = mat_state[, 3],
+                              "c" = mat_state[, 4], "d" = mat_state[, 5],
+                              "e" = mat_state[, 6])
+  return(condition_df)
+}  #  end of function
+  
