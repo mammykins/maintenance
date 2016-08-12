@@ -102,6 +102,12 @@ rebmainder <- function(starting_state, timesteps,
      
      e = (alf_1 * current_state[6]) + (alf_2 * (maintenance_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
     )
+    
+    #  TEST for negative numbers due to over-investment, does not stop but warns the user
+    if (rebmain_state < 0) {
+      warning("Inefficient investment, too much money is being assigned to rebuild reducing GIFA below zero.", call. = FALSE)
+    } 
+    rebmain_state[rebmain_state < 0] <- 0  #  if negative GIFA replace with zero
     ###########################################################################################
     #DETERIORATION
     mat_state[(i + 1), 1:6] <- (rebmain_state * transition_matrix)[1:6]

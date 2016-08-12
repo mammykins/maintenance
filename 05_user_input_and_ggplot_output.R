@@ -146,7 +146,7 @@ relevant_title <- paste("Predicted deterioration of the school estate",
 
 p1 <- ggplot() + geom_line(aes(y = Count, x = timestep, colour = condition), size = 2,
                            data = long_condition_df, stat = "identity") +
-  ggtitle(relevant_title) + labs(x = "Timestep", y = "Count") +
+  ggtitle(relevant_title) + labs(x = "Timestep", y = "GIFA") +
   scale_colour_manual(values = colours_cb, name = "Condition",
                       labels = c("A", "B", "C", "D", "E", "New", "Total")) +
   theme(legend.position = "bottom", legend.direction = "horizontal",
