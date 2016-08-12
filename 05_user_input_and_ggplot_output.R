@@ -25,7 +25,7 @@ library(gridExtra)
 
 # USER INPUT --------------------------------------------------------------
 
-build_type_of_interest <- "built_pre_1919"
+build_type_of_interest <- "built_total"
 timesteps <- 10  #  forecast horizon, numer of time steps to simulate
 
 # GET RELEVANT DATA AND REBMAINDER FUNCTION -------------------------------------------------------
@@ -144,7 +144,7 @@ relevant_title <- paste("Predicted deterioration of the school estate",
                         "\n", build_type_of_interest) %>%
   gsub(pattern = "_", replacement = " ")
 
-p1 <- ggplot() + geom_line(aes(y = Count, x = timestep, colour = condition), size = 2,
+p1 <- ggplot() + geom_line(aes(y = Count, x = timestep, colour = condition), size = 1.5,
                            data = long_condition_df, stat = "identity") +
   ggtitle(relevant_title) + labs(x = "Timestep", y = "GIFA") +
   scale_colour_manual(values = colours_cb, name = "Condition",

@@ -104,8 +104,8 @@ rebmainder <- function(starting_state, timesteps,
     )
     
     #  TEST for negative numbers due to over-investment, does not stop but warns the user
-    if (rebmain_state < 0) {
-      warning("Inefficient investment, too much money is being assigned to rebuild reducing GIFA below zero.", call. = FALSE)
+    if (any(rebmain_state < 0)) {
+      warning("Inefficient investment; too much money is being assigned to rebuild, thus reducing GIFA below zero for at least one state.", call. = FALSE)
     } 
     rebmain_state[rebmain_state < 0] <- 0  #  if negative GIFA replace with zero
     ###########################################################################################
