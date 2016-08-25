@@ -35,7 +35,7 @@ source("rebmainder_all_in_one.R")  #  Call the r
 #  levels(pdsp_data$Building_Type)  #  build_type_of_interest potential input
 
 # CREATE TRANSITION MATRIX ------------------------------------------------
- tm_data <- tm_data_with_na  #  uncomment if you want non-zero na rates, mroe realistic for long timeframe
+# tm_data <- tm_data_with_na  #  uncomment if you want non-zero na rates, mroe realistic for long timeframe
 
 na <- filter(tm_data, Building_Type == build_type_of_interest) %>%
   select(na)

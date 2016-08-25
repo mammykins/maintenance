@@ -15,7 +15,7 @@
 #  functions verbs, arguments nouns
 #  use common prefix for function names
 #  make the functions pipeable
-
+#
 
 # LIBRARY -----------------------------------------------------------------
 
@@ -59,11 +59,11 @@ rebmainder <- function(starting_state, timesteps,
   
   for (i in 1:timesteps) {
     
-    h <- mat_state[i, 6]*rebuild_cost_back_to_new # £ to rebuild all current decommissioned 
+    h <- mat_state[i, 6]*rebuild_cost_back_to_new # ? to rebuild all current decommissioned 
     #  need to update iteratively, hence inclusion here
     
     #  Check lexical scoping, R searches within the function
-    if (rebuild_investment > h) {  #  £ cost of bringing e to a
+    if (rebuild_investment > h) {  #  ? cost of bringing e to a
       #  money surplus for rebuilding b, c, d after rebuilding all e
       alf_1 <- 1  
       alf_2 <- 0
@@ -100,7 +100,10 @@ rebmainder <- function(starting_state, timesteps,
      d =   (alf_1 * (current_state[5] - (prop_rebuild_d * (rebuild_investment - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) + 
        (alf_2 * current_state[5]) - (prop_maint_d * maintenance_investment / (cost_d_to_a / discount_rate_maintain)),
      
-     e = (alf_1 * current_state[6]) + (alf_2 * (maintenance_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
+     e = alf_2 * (current_state[6] - (rebuild_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
+    
+     #before correction
+    # e = (alf_1 * current_state[6]) - (alf_2 * (maintenance_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
     )
     
     #  TEST for negative numbers due to over-investment, does not stop but warns the user
