@@ -26,7 +26,7 @@ library(gridExtra)
 # USER INPUT --------------------------------------------------------------
 
 build_type_of_interest <- "built_total"
-timesteps <- 10  #  forecast horizon, numer of time steps to simulate
+timesteps <- 30  #  forecast horizon, numer of time steps to simulate
 
 # GET RELEVANT DATA AND REBMAINDER FUNCTION -------------------------------------------------------
 
@@ -35,6 +35,7 @@ source("rebmainder_all_in_one.R")  #  Call the r
 #  levels(pdsp_data$Building_Type)  #  build_type_of_interest potential input
 
 # CREATE TRANSITION MATRIX ------------------------------------------------
+ tm_data <- tm_data_with_na  #  uncomment if you want non-zero na rates, mroe realistic for long timeframe
 
 na <- filter(tm_data, Building_Type == build_type_of_interest) %>%
   select(na)
@@ -116,7 +117,7 @@ dis_r <- 0.17 # discounted factor for rebuild cost
 
 # USE FUNCTION ------------------------------------------------------------
 
-condition_df <- rebmainder(starting_state = initial_state, timesteps = 10,
+condition_df <- rebmainder(starting_state = initial_state, timesteps,
                            rebuild_investment = R,
                            maintenance_investment = M,
                            rebuild_cost_back_to_new = r,

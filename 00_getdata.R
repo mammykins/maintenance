@@ -49,4 +49,4 @@ ed <- 0
 ee <- 0
 
 tm_data <- read.csv("tm_bolun.csv", header = TRUE)  
-
+tm_data_with_na <- read.csv("tm_bolun_with_na_rates.csv", header = TRUE)
