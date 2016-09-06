@@ -81,11 +81,14 @@ rm(
 
 # OTHER USER INPUTS ------------------------------------------------------------
 
-R <- 1500e6 #  £m invested in rebuilding the buildings at time t
-main_cash <- 1500e6  #  £m maintenance cash
-revenue <- 1234e6  #  £m revenue of the school
-fixed_main_cost <- 1288e6  #  £m Fixed maitanence cost
+R <- 1500e6 #  Â£m invested in rebuilding the buildings at time t
+main_cash <- 1500e6  #  Â£m maintenance cash
+revenue <- 1234e6  #  Â£m revenue of the school
+fixed_main_cost <- 1288e6  #  Â£m Fixed maitanence cost
 infl_rate <- 1.13  #  inflation rate, should be a vector
+# infl_rate <- c(1.00, 1.02, 1.04, 1.06, 1.08, 1.10, 1.12, 1.14, 1.16, 1.18,
+#                1.20, 1.22, 1.24, 1.26, 1.28, 1.30, 1.32, 1.34, 1.37, 1.39, 
+#                1.41, 1.43, 1.45, 1.47, 1.49, 1.51, 1.53, 1.55, 1.57, 1.59)
 
 # INITIAL STATE --------------------------------------------------------------
 initial_state <- pdsp_data %>%
@@ -114,6 +117,16 @@ y_d <- 0.40  # proportion of rebuilding fund allocated to building type D
 
 dis_m <- 0.5  # discounted factor for maintenance cost
 dis_r <- 0.17 # discounted factor for rebuild cost
+
+# VECTORISATION -----------------------------------------------------------
+ 
+revenue <- rep(revenue, timesteps)
+fixed_main_cost <- rep(fixed_main_cost, timesteps)
+main_cash <- rep(main_cash, timesteps)
+M <- (main_cash + revenue - fixed_main_cost) / infl_rate
+# amount of money invested in maintaining the buildings at time t
+R <- rep(R, timesteps)/ infl_rate
+# Rebuilding fund should also be deflated
 
 # USE FUNCTION ------------------------------------------------------------
 
@@ -147,7 +160,8 @@ relevant_title <- paste("Predicted deterioration of the school estate",
 
 p1 <- ggplot() + geom_line(aes(y = Count, x = timestep, colour = condition), size = 1.5,
                            data = long_condition_df, stat = "identity") +
-  ggtitle(relevant_title) + labs(x = "Timestep", y = "GIFA") +
+  #ggtitle(relevant_title) +
+  labs(x = "Timestep", y = "GIFA") +
   scale_colour_manual(values = colours_cb, name = "Condition",
                       labels = c("A", "B", "C", "D", "E", "New", "Total")) +
   theme(legend.position = "bottom", legend.direction = "horizontal",

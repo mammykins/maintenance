@@ -82,29 +82,91 @@ rebmainder <- function(starting_state, timesteps,
     #REBMAIN
     #  this takes current state and rebuilds and maintains it
     #  this is used as input into det model which outputs next state at i + 1
+    #  See page 16 of Bolun Wang's thesis for details
     
-    rebmain_state <- c(
-     n = (rebuild_investment / (rebuild_cost_back_to_new / discount_rate_rebuild)) + current_state[1],
-     
-     a =   current_state[2] + 
-       ((prop_maint_b * maintenance_investment) / (cost_b_to_a / discount_rate_maintain)) + 
-       ((prop_maint_c * maintenance_investment) / (cost_c_to_a / discount_rate_maintain)) + 
-       ((prop_maint_d * maintenance_investment) / (cost_d_to_a / discount_rate_maintain)),
-     
-     b =   (alf_1 * (current_state[3] - (prop_rebuild_b * (rebuild_investment - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) +
-       (alf_2 * current_state[3]) - (prop_maint_b * maintenance_investment / (cost_b_to_a / discount_rate_maintain)),
-     
-     c = (alf_1 * (current_state[4] - (prop_rebuild_c * (rebuild_investment - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) +
-       (alf_2 * current_state[4]) - (prop_maint_c * maintenance_investment / (cost_c_to_a / discount_rate_maintain)),
-     
-     d =   (alf_1 * (current_state[5] - (prop_rebuild_d * (rebuild_investment - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) + 
-       (alf_2 * current_state[5]) - (prop_maint_d * maintenance_investment / (cost_d_to_a / discount_rate_maintain)),
-     
-     e = alf_2 * (current_state[6] - (rebuild_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
+    #GIFA N------------------------------
+    # Cast an upper ceiling on GIFA N: increase in GIFA N should not exceed sum of GIFA B, C, D, E
+    max_to_rebuild <-  (current_state[3] + current_state[4] + current_state[5] + current_state[6])
     
-     #before correction
-    # e = (alf_1 * current_state[6]) - (alf_2 * (maintenance_investment /(rebuild_cost_back_to_new / discount_rate_rebuild)))
-    )
+    ifelse(((rebuild_investment[i] / (rebuild_cost_back_to_new / discount_rate_rebuild)) > max_to_rebuild),
+           n <- max_to_rebuild + current_state[1], #  yes
+           n <- (rebuild_investment[i] / (rebuild_cost_back_to_new / discount_rate_rebuild)) + current_state[1] # no
+           )
+    
+    #GIFA A------------------------------
+    #  Cast an upper ceiling on GIFA A: increase in GIFA A should not exceed sum of GIFA B, C, D
+    max_to_main <- (current_state[3] + current_state[4] + current_state[5])
+    
+    #  Ideal amount to be maintained
+    a0 <- ((prop_maint_b * maintenance_investment[i]) / (cost_b_to_a / discount_rate_maintain)) + 
+      ((prop_maint_c * maintenance_investment[i]) / (cost_c_to_a / discount_rate_maintain)) + 
+      ((prop_maint_d * maintenance_investment[i]) / (cost_d_to_a / discount_rate_maintain))
+    
+    ifelse(a0 > max_to_main,  #  test
+           a <- max_to_main + current_state[2],  #  yes
+           a <- a0 + current_state[2])  #  no
+    
+    #GIFA B------------------------------
+    b_r <-  (alf_1 * (current_state[3] - (prop_rebuild_b * (rebuild_investment[i] - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) +
+      (alf_2 * current_state[3])
+    
+    if (b_r < 0) {
+      warning("Inefficient investment; too much money is being assigned to rebuliding B, thus reducing GIFA below zero.", call. = FALSE)
+      n <- n + b_r
+      b_r <- 0
+      }
+    
+    b_m <- b_r - (prop_maint_b * maintenance_investment[i] / (cost_b_to_a / discount_rate_maintain))
+    if ( b_m < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to maintaining B, thus reducing GIFA below zero.", call. = FALSE)
+      a = a + b_m
+      b_m <- 0
+    }
+    
+    #GIFA C------------------------------
+    c_r = (alf_1 * (current_state[4] - (prop_rebuild_c * (rebuild_investment[i] - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) +
+      (alf_2 * current_state[4]) 
+    
+    if ( c_r < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to rebuliding C, thus reducing GIFA below zero.", call. = FALSE)
+      n = n + c_r
+      c_r <- 0
+    }
+    c_m = c_r - (prop_maint_c * maintenance_investment[i] / (cost_c_to_a / discount_rate_maintain))
+    if ( c_m < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to maintaining C, thus reducing GIFA below zero.", call. = FALSE)
+      a = a + c_m
+      c_m <- 0
+    }
+    
+    #GIFA D------------------------------
+    
+    d_r = (alf_1 * (current_state[5] - (prop_rebuild_d * (rebuild_investment[i] - h))/ (rebuild_cost_back_to_new / discount_rate_rebuild) )) + 
+      (alf_2 * current_state[5]) 
+    
+    if ( d_r < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to rebuliding D, thus reducing GIFA below zero.", call. = FALSE)
+      n = n + d_r
+      d_r <- 0
+    }
+    
+    d_m = d_r - (prop_maint_d * maintenance_investment[i] / (cost_d_to_a / discount_rate_maintain))
+    if ( d_m < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to maintaining D, thus reducing GIFA below zero.", call. = FALSE)
+      a = a + d_m
+      d_m <- 0
+    }
+    
+    #GIFA E------------------------------
+    
+    e = alf_2 * (current_state[6] - (rebuild_investment[i] /(rebuild_cost_back_to_new / discount_rate_rebuild)))
+    if ( e < 0 ) {
+      warning("Inefficient investment; too much money is being assigned to rebuliding E, thus reducing GIFA below zero.", call. = FALSE)
+      n = n + e
+      e <- 0
+    }
+    
+    rebmain_state <- c(n , a , b_m , c_m , d_m , e)
     
     #  TEST for negative numbers due to over-investment, does not stop but warns the user
     if (any(rebmain_state < 0)) {
