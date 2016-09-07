@@ -63,7 +63,7 @@ rebmainder <- function(starting_state, timesteps,
     #  need to update iteratively, hence inclusion here
     
     #  Check lexical scoping, R searches within the function
-    if (rebuild_investment > h) {  #  ? cost of bringing e to a
+    if (rebuild_investment[i] > h) {  #  ? cost of bringing e to a
       #  money surplus for rebuilding b, c, d after rebuilding all e
       alf_1 <- 1  
       alf_2 <- 0
