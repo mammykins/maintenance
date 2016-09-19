@@ -13,15 +13,8 @@ setwd("C:/Users/mammykins/Documents/GitHub/maintenance/")
 #getwd()
 
 # LIBRARY -----------------------------------------------------------------
-library(dplyr)
+library(tidyverse)
 library(markovchain)
-library(purrr)
-library(reshape2)
-library(ggplot2)
-library(ggthemes)
-library(RColorBrewer)
-library(GGally)
-library(gridExtra)
 
 # USER INPUT --------------------------------------------------------------
 
@@ -34,50 +27,9 @@ source("00_getdata.R")
 source("rebmainder_all_in_one.R")  #  Call the r
 #  levels(pdsp_data$Building_Type)  #  build_type_of_interest potential input
 
-# CREATE TRANSITION MATRIX ------------------------------------------------
+# TRANSITION MATRIX -------------------------------------------------------
 # tm_data <- tm_data_with_na  #  uncomment if you want non-zero na rates, mroe realistic for long timeframe
-
-na <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(na)
-ab <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(ab)
-bc <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(bc)
-cd <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(cd)
-de <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(de)
-ee <- filter(tm_data, Building_Type == build_type_of_interest) %>%
-  select(ee)
-
-#  get the numbers into the appropriate matrix format
-
-tm_deterioration <- matrix(c(1 - na[[1]], na[[1]], nb, nc, nd, ne,
-                             an, 1 - ab[[1]], ab[[1]], ac, ad, ae,
-                             bn, ba, 1 - bc[[1]], bc[[1]], bd, be,
-                             cn, ca, cb, 1 - cd[[1]], cd[[1]], ce,
-                             dn, da, db, dc, 1 - de[[1]], de[[1]],
-                             en, ea, eb, ec, ee[[1]], 1 - ee[[1]]),
-                           nrow = 6, byrow = TRUE) #define the transition matrix
-
-# CREATE Discrete time Markov Chain object --------------------------------
-dtmc <- new("markovchain", transitionMatrix = tm_deterioration,
-            states = c("n", "a", "b", "c", "d", "e"),
-            name = paste(build_type_of_interest))
-
-# TIDY ENVIRONMENT --------------------------------------------------------
-# clear junk from 00_getdata.R, as incorporated into dtmc
-
-rm(
-  list = c(paste0("a", letters[1:5]),
-           paste0("b", letters[1:5]),
-           paste0("c", letters[1:5]),
-           paste0("d", letters[1:5]),
-           paste0("e", letters[1:5]),
-           paste0(letters[1:5], "n"),
-           paste0("n", letters[1:5]),
-           "nn")
-)
+source("tm_create_and_tidy.R")
 
 # OTHER USER INPUTS ------------------------------------------------------------
 
@@ -88,7 +40,7 @@ fixed_main_cost <- 1288e6  #  £m Fixed maitanence cost
 infl_rate <- 1.13  #  inflation rate, should be a vector
 # infl_rate <- c(1.00, 1.02, 1.04, 1.06, 1.08, 1.10, 1.12, 1.14, 1.16, 1.18,
 #                1.20, 1.22, 1.24, 1.26, 1.28, 1.30, 1.32, 1.34, 1.37, 1.39, 
-#                1.41, 1.43, 1.45, 1.47, 1.49, 1.51, 1.53, 1.55, 1.57, 1.59)
+#                1.41, 1.43, 1.45, 1.47, 1.49, 1.51, 1.53, 1.55, 1.57, 1.59)  #  30 years forecast from 
 
 # INITIAL STATE --------------------------------------------------------------
 initial_state <- pdsp_data %>%
@@ -96,7 +48,7 @@ initial_state <- pdsp_data %>%
   select(-Building_Type, -ends_with("Count")) %>%
   as.numeric()  #  Drop building type, remove columns and names
 
-# PARAMETERS (OPTIONAL USER INPUT) --------------------------------------------------------------
+# PARAMETERS (DEFAULTS SET; OPTIONAL USER INPUT) --------------------------------------------------------------
 #M <- main_cash / infl_rate + revenue - fixed_main_cost  #  Excel sandpit model
 M <- (main_cash + revenue - fixed_main_cost) / infl_rate # amount of money invested in maintaining the buildings at time t
 r <- 2000 # rebuild rate/unit cost of bringing a building back to new condition
@@ -125,7 +77,7 @@ fixed_main_cost <- rep(fixed_main_cost, timesteps)
 main_cash <- rep(main_cash, timesteps)
 M <- (main_cash + revenue - fixed_main_cost) / infl_rate
 # amount of money invested in maintaining the buildings at time t
-R <- rep(R, timesteps)/ infl_rate
+R <- rep(R, timesteps) / infl_rate
 # Rebuilding fund should also be deflated
 
 # USE FUNCTION ------------------------------------------------------------
@@ -140,44 +92,11 @@ condition_df <- rebmainder(starting_state = initial_state, timesteps,
                            cost_b_to_a = cost_b, cost_c_to_a = cost_c, cost_d_to_a = cost_d, transition_matrix = dtmc)
 
 # GGPLOT COLOURS and DATA RESHAPE ------------------------------------------------------------------
-colours <- brewer.pal(7, "Set1")  #  including total, 7 colours required
-colours_cb <- c("#8c510a", "#d8b365", "#f6e8c3", "#A65628",
-                "#c7eae5", "#5ab4ac", "#01665e")
+colour_blind_mode <- TRUE
+source("plot_condition_output.R")
 
-#  We could do with reshaping the data to make it easier to handle
-#  See here: http://www.r-bloggers.com/the-reshape-function/
-long_condition_df <- reshape(condition_df, varying = 2:8, v.names = "Count",
-                             timevar = "condition", times = names(condition_df)[2:8],
-                             idvar = "Condition ID",
-                             direction = "long") %>%
-  filter(condition != "total")  #  Let's remove total as its uninformative
-
-# PLOT DETAILS ------------------------------------------------------------
-#  need a sensible syntactic title tailored to the user input, remove underscores
-relevant_title <- paste("Predicted deterioration of the school estate",
-                        "\n", build_type_of_interest) %>%
-  gsub(pattern = "_", replacement = " ")
-
-p1 <- ggplot() + geom_line(aes(y = Count, x = timestep, colour = condition), size = 1.5,
-                           data = long_condition_df, stat = "identity") +
-  #ggtitle(relevant_title) +
-  labs(x = "Timestep", y = "GIFA") +
-  scale_colour_manual(values = colours_cb, name = "Condition",
-                      labels = c("A", "B", "C", "D", "E", "New", "Total")) +
-  theme(legend.position = "bottom", legend.direction = "horizontal",
-        legend.title = element_text())
-
-#p1 + theme_bw()
-
-plot1 <- p1 + theme_tufte() + theme(plot.title = element_text(size = 10, face = "bold"))
-
-# GGSAVE OR OUTPUT ----------------------------------------------------------
-grid.arrange(plot1, ncol = 1)
-
-#merge all three plots within one grid (and visualize this)
-#grid.arrange(plot1, plot2, plot3, nrow = 3) #arranges plots within grid
-
-#save
-#g <- arrangeGrob(plot1, plot2, plot3, nrow = 3) #generates g
+# SAVE AS -----------------------------------------------------------------
+#g <- plot1
+#g <- gridExtra::arrangeGrob(plot1, plot2, plot3, nrow = 3) #generates g
 #ggsave(file = "whatever.pdf", g) #saves g
 
